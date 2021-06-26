@@ -1,0 +1,27 @@
+% LaTeX syntax is pretty unintuitive, so here's a guided template to help you get more comfortable with the gist of it! Let's start with basic things we can set up (you can add and delete things as you see fit)
+\documentclass{article} %We will typically use this document class because it sets up the paper to be formated 
+%Installing Packages: These packages are very useful for formatting the table! You can search the web for other ones. Booktabs makes the tables prettier, english{babel} denotes what language the tables are in, and tabularx makes the width of the columns adjustable! 
+\usepackage{booktabs}
+\usepackage[english]{babel}
+\usepackage{tabularx}     %this allows you to adjust the width of your columns
+%\usepackage{pdflscape} %uncomment this and the {landscape} commands  if you want the paper to be oriented in landscape
+
+\begin{document}
+%\begin{landscape}  
+\begin{table}
+\begin{tabular} {c c c c c c} %<--  use this to put down how many columns you need, i.e. {c c c c c c} produces 6 centered columns. l = left justified columns, c = centered columns, r = right-justified columns. Play around with the number of columns you can fit onto the page
+
+%basic syntax to know: 
+% % = comment, & = column separator, \\ = start a new row
+\hline %use this whenever you want to insert a horizontal line!  
+% Here is a website with more information on LaTeX tables and formatting: https://en.wikibooks.org/wiki/LaTeX/Tables
+
+
+%This is where content goes (if you need this shell it's probably because the authors have already generated this content through Stata or some other code
+
+%Things that are incompatible with tabular! Underscores, hyphens... (add other things that may be incompatible)
+
+\end{tabular}
+\end{table}
+%\end{landscape}
+\end{document}
