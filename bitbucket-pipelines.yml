@@ -1,0 +1,185 @@
+#  Template python-build
+
+#  This template allows you to validate your python code.
+#  The workflow allows running tests and code linting on the default branch.
+
+
+pipelines:
+  custom:
+    1-populate-from-icpsr: #name of this pipeline
+      - variables:          #list variable names under here
+          # These do not need to have a value, if "config.yml" is filled out.
+          - name: openICPSRID   
+          - name: jiraticket
+          #- name: ZenodoID
+          #- name: DataverseID
+          #- name: OSFID
+          - name: ProcessStata
+            default: "yes"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: ProcessR
+            default: "no"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: ProcessPython
+            default: "no"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: SkipProcessing
+            default: "no"
+            allowed-values:
+              - "no"
+              - "yes"
+      - step:
+          name: Download
+          image: python:3.8
+          artifacts:
+            - generated/**
+            - cache/**
+          caches:
+            - pip
+          script:
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - if [ -d $openICPSRID ]; then \rm -rf $openICPSRID; fi
+            - if [ -f tools/download_openicpsr-private.py ]; then python3 tools/download_openicpsr-private.py $openICPSRID; fi
+            - mkdir cache
+            - mv *.zip cache/
+            - chmod a+rx ./automations/*.sh
+            - ./automations/01_prepare_aux.sh
+            - ./automations/02_list_data_files.sh $openICPSRID
+            - ./automations/03_list_program_files.sh $openICPSRID
+            - ./automations/04_create_manifest.sh $openICPSRID
+            - ls -lR
+      - parallel: # we will run these in parallel
+        - step:
+            name: Run Stata parser and PII scanner
+            image:
+              name: larsvilhuber/bitbucket-stata:latest
+              username: $W_DOCKER_USERNAME
+              password: $W_DOCKER_PAT
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessStata $openICPSRID
+              - ./automations/10_run_stata_scanner.sh $openICPSRID
+            artifacts:
+              - generated/**
+        - step:
+            name: Run Rds parser
+            image: aeadataeditor/verification-r:latest
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessR $openICPSRID
+              - ./automations/14_run_rds_scanner.sh $openICPSRID
+        - step:
+            name: Run Python parser
+            image: python:3.8
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessPython $openICPSRID
+              - ./automations/15_run_python_scanner.sh $openICPSRID
+            artifacts:
+              - generated/**
+      ## collect all information
+      - step:
+          image: python:3.8
+          name: Add info to REPLICATION.md
+          script:
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - chmod a+rx ./automations/*.sh
+            - ./automations/24_amend_report.sh
+          artifacts:
+            - generated/**
+      - step: 
+          image: python:3.8
+          # This will re-download it again, but only if it's not in cache.
+          name: Commit everything back
+          script:
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - if [ -d cache ]; then ls -lR cache/*; fi
+            - ls -l generated/*
+            - if [ -f cache/$openICPSRID.zip ]; then mv cache/$openICPSRID.zip .; fi
+            - if [ -d $openICPSRID ]; then \rm -rf $openICPSRID; fi
+            - if [ ! -f $openICPSRID.zip ]; then python3 tools/download_openicpsr-private.py $openICPSRID; fi
+            - chmod a+rx ./automations/*.sh
+            - ./automations/00_unpack_zip.sh  $openICPSRID
+            - ./automations/20_commit_code.sh $openICPSRID
+            - ./automations/21_cleanup.sh     $openICPSRID
+            - ./automations/25_replace_report.sh
+            - ./automations/30_cleanup_aux.sh
+            - ./tools/update_config.sh
+            - ./automations/20_commit_code.sh config.yml notag
+            - git status
+            - git push 
+            - git push --tags 
+    2-merge-report: #name of this pipeline
+      - step:
+          name: Combine Part A and B of the report
+          script:
+            - chmod a+rx automations/*.sh
+            - ./automations/50_merge-parts.sh
+            - git push
+    3-split-report: #name of this pipeline
+      - step:
+          name: Split REPLICATION.md into Part A and B of the report
+          script:
+            - chmod a+rx automations/*.sh
+            - ./automations/51_split-parts.sh
+            - git push
+    4-refresh-tools: #name of this pipeline
+      - step:
+          name: Refresh the tools in this repository
+          script:
+            - wget https://raw.githubusercontent.com/AEADataEditor/replication-template/master/tools/update_tools.sh
+            - chmod a+rx update_tools.sh
+            - ./update_tools.sh
+            - git push
+    z-run-any: # name of this pipeline
+      - variables:          #list variable names under here
+          # These do not need to have a value, if "config.yml" is filled out.
+          - name: openICPSRID   
+          #- name: ZenodoID
+          #- name: DataverseID
+          #- name: OSFID
+          - name: MainFile
+            default: "main.do"
+          - name: RunCommand
+            default: "run.sh"
+      - step:
+            name: Run R or Stata code
+            size: 2x
+            image:
+              name: larsvilhuber/bitbucket-stata:latest
+              username: $W_DOCKER_USERNAME
+              password: $W_DOCKER_PAT
+            # commented out to speed up processing. Uncomment for debugging
+            #artifacts:
+            # - 1**/**
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -f tools/download_openicpsr-private.py ]; then python3 tools/download_openicpsr-private.py $openICPSRID; fi
+              - chmod a+rx ./automations/*.sh
+              - chmod a+rx ./*.sh
+              - ./automations/00_unpack_zip.sh  $openICPSRID
+              - ./tools/linux-system-info.sh
+              - ./tools/update_config.sh
+              - ./run.sh
+              - ./automations/20_commit_code.sh $openICPSRID run
+              - ./automations/20_commit_code.sh config.yml
+              - git status
+              - git push
