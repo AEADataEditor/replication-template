@@ -92,12 +92,20 @@ In assessing compliance with our [Data and Code Availability Policy](https://www
   - INSTRUCTIONS: summarize the access conditions here.
 - [ ] DOI or URL is provided, and works: (PROVIDE URL OR DOI HERE)
 - [ ] Data are not cited, but a working paper, article, or other document is cited (not a data citation)
-- [ ] Data are cited [ ] in the manuscript, [ ] in the README
+- [ ] Data are cited
+  - [ ] in the manuscript
+  - [ ] in the README
 
 > INSTRUCTIONS: copy the citation here, whether data or the document citation.
 
+> INSTRUCTIONS: If the relevant items above are NOT checked, leave the related [REQUIRED] element here. Otherwise, delete the line.
+
+> [REQUIRED] Please add citations of the supplementary data used to the article. Guidance on how to cite supplementary data is provided in the [AEA Sample References](https://www.aeaweb.org/journals/policies/sample-references) - See third example.
+
+> [REQUIRED] Please provide a clear description of access modality and source location for this dataset. Some examples are given [on this website](https://social-science-data-editors.github.io/guidance/Requested_information_dcas.html).
+
 > INSTRUCTIONS: Here is an example (delete it once you've read through it!)
-> 
+
 #### Example data: Bureau of Labor Statistics
 
 > INSTRUCTIONS: In this example, data are not provided, a link is provided in the README, and that's about it. Here's how you would fill that out:
@@ -107,7 +115,9 @@ In assessing compliance with our [Data and Code Availability Policy](https://www
   - No information on access conditions.
 - [x] DOI or URL is provided, and works: http://data.bls.gov/cgi-bin/surveymost?sm+08
 - [ ] Data are not cited, but a working paper, article, or other document is cited (not a data citation)
-- [x] Data are cited [x] in the manuscript, [x] in the README:
+- [x] Data are cited
+  - [X] in the manuscript
+  - [X] in the README:
 
 > Bureau of Labor Statistics. 2000–2010. “Current Employment Statistics: Colorado, Total Nonfarm, Seasonally adjusted - SMS08000000000000001.” United States Department of Labor. http://data.bls.gov/cgi-bin/surveymost?sm+08 (accessed February 9, 2011).
 
