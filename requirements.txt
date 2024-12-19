@@ -1,0 +1,3 @@
+PyYAML>=6.0
+requests
+zenodo-get>=1.6.0
