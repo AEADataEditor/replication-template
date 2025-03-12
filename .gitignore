@@ -1,0 +1,136 @@
+# Data file extensions
+# They are duplicated in upper case and in some cases mixed case to cover all bases
+# If you want to make the parsing overall case-insensitive, you can use the following:
+#  git config core.ignorecase false
+# Version: 2025-01-16
+*.gpkg
+*.GPKG
+*.bak
+*.BAK
+*.tmp
+*.TMP
+*.aux
+*.AUX
+*.mat
+*.MAT
+*.sav
+*.SAV
+*.sas7bdat
+*.SAS7BDAT
+*.dta
+*.DTA
+*.csv
+*.CSV
+*.tsv
+*.TSV
+*.RData
+*.RDATA
+*.rdata
+*.Rdata
+*.Rds
+*.RDs
+*.RDS
+*.rds
+*.RDA
+*.Rda
+*.raw
+*.Raw
+*.RAW
+*.dbf
+*.DBF
+*.prj
+*.PRJ
+*.shp
+*.SHP
+*.shx
+*.SHX
+*.xml
+*.XML
+*.cpg
+*.CPG
+*.sbn
+*.SBN
+*.sbx
+*.SBX
+*.mpk
+*.MPK
+*.tfw
+*.TFW
+*.pkl
+*.PKL
+*.pbf
+*.PBF
+*.jld2
+*.JLD2
+*.dat
+*.DAT
+*.Dat
+*.feather
+# Sometimes, these are data files, too
+*.txt
+*.TXT
+*.asc
+*.ASC
+# Usually, we include images, but TIFF files can be huge
+*.tif*
+*.TIF*
+*.ovr
+*.OVR
+*.lyrx
+*.lyrx
+# Archives
+*.rar
+*.RAR
+*.zip
+*.ZIP
+*.gz
+*.tgz
+*.xz
+*.7z
+*.tar
+# Random binary formats
+*.bin
+*.BIN
+*.exe
+*.EXE
+*.dll
+*.DLL
+*.so
+*.SO
+# MacOS specific files and directories
+*.DS_Store
+*.DS_store
+*.ds_store
+__MACOSX/
+*.dmg
+*.DMG
+# Stata-specific temp files
+*.stswp
+# build-specific directories
+.rproj*
+.Rhistory
+.Rproj.user
+test
+.vscode
+*.npy
+__pycache__
+libraries
+# Exclusions we need for our work
+!R*.txt
+!R*.TXT
+!pii_stata_output.csv
+!code-check.xlsx
+!signalcommands.txt
+!stopwords.txt
+!candidatepackages.xlsx
+!requirements*.txt
+# Exclusions we need
+build/requirements.txt
+codeocean-*-live
+tmp
+cache
+# some files which should never be included
+*.lic
+*.LIC
+# Ignore all files in any directory named "data"
+**/data/*
