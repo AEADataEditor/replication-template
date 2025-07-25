@@ -1,0 +1,83 @@
+{smcl}
+{* 2june2004/21nov2006}{...}
+{hline}
+help for {hi:fs}
+{hline}
+
+{title:Show names of files in compact form}
+
+{p 8 17 2}
+{cmd:fs} 
+[{it:filespec} [{it:filespec} [ ... ]]]
+
+
+{title:Description}
+
+{p 4 4 2}{cmd:fs} lists the names of files in compact form.  Note that
+files do not include folders or directories. 
+
+{p 4 4 2}With no arguments, {cmd:fs}
+lists names of files in the current folder or directory. Otherwise, it
+follows file specifications.  A file specification {it:filespec} is a 
+filename or
+(more commonly) a set of filenames indicated by the use of wildcards
+{cmd:*} or {cmd:?}. A folder or directory prefix should be given for
+files outside the current directory. 
+
+{p 4 4 2}See help on {help dir} or {help ls} for listing the names of files
+with more detailed information. Unlike either of those commands, {cmd:fs} may
+be given more than one file specification. Also unlike either of those
+commands, {cmd:fs} shows any hidden files. 
+
+{p 4 4 2}The list of filenames is returned in {cmd:r(files)}, so 
+long as that is not empty. 
+
+
+{title:Remarks} 
+
+{p 4 4 2}It is recommended that even if you use Windows, you use forward
+slashes {cmd:/} rather than backward slashes {cmd:\}.  Stata will
+understand and there will then be no clash with other meanings for the
+backward slash. 
+
+
+{title:Examples}
+
+{p 4 4 2}{cmd:. fs}
+
+{p 4 4 2}{cmd:. fs *.dta}
+
+{p 4 4 2}{cmd:. fs *.ado *.hlp}
+
+{p 4 4 2}{cmd:. fs /ado/plus/f/*.ado}
+
+{p 4 4 2}{cmd:. fs *.gph}{break}
+         {cmd:. foreach f in `r(files)' {c -(}}{break} 
+         {cmd:. {space 8}graph use `f'}{break} 
+         {cmd:. {space 8}more}{break} 
+         {cmd:. {c )-}} 
+
+
+{title:Acknowledgements}
+
+{p 4 4 2}
+William Gould kindly told me about the subroutine for display in columns, 
+which is copied from the source code for {help classutil}. 
+Kit Baum was a very helpful tester. 
+
+
+{title:Author}
+
+{p 4 4 2}Nicholas J. Cox, Durham University, U.K.{break} 
+         n.j.cox@durham.ac.uk
+
+
+{title:Also see}
+
+{p 4 13 2}Manual:  {hi:[D] dir}
+
+{p 4 13 2}Online:  
+help for {help dir}, 
+help for {help extended_fcn:extended macro functions}, 
+help for {help folders} (if installed) 
+
