@@ -1,0 +1,6 @@
+PyYAML>=6.0
+requests
+zenodo-get>=1.6.0
+osfclient
+boxsdk[jwt]==3.14.0
+python-dotenv
