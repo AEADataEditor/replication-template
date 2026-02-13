@@ -1,0 +1,8 @@
+PyYAML>=6.0
+requests
+zenodo-get>=1.6.0
+osfclient
+boxsdk[jwt]==3.14.0
+python-dotenv
+jira
+sivacor @ git+https://github.com/SIVACOR/sivacor-editor-tools.git@6d9447b62fc640625b983c6151c9ae5595b993d3
