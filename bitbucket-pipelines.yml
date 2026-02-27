@@ -1,0 +1,513 @@
+#  Template python-build
+
+#  This template allows you to validate your python code.
+#  The workflow allows running tests and code linting on the default branch.
+definitions:
+  steps:
+    - step: &z-run-any-anchor
+        name: Run R or Stata code
+        # commented out to speed up processing. Uncomment for debugging
+        #artifacts:
+        # - 1**/**
+        script:
+          - . ./tools/parse_yaml.sh
+          - eval $(parse_yaml config.yml)
+          - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          - if [ -f tools/download_openicpsr-private.py ]; then python3 tools/download_openicpsr-private.py $openICPSRID; fi
+          - chmod a+rx ./automations/*.sh
+          - chmod a+rx ./*.sh
+          - ./automations/00_unpack_zip.sh  $openICPSRID
+          - ./automations/01_check_file_sizes.sh $openICPSRID
+          - ./tools/linux-system-info.sh
+          - ./tools/update_config.sh
+          - ./run.sh
+          - project="${openICPSRID:-$openicpsr}"
+          - project="${project:-$dataverse}"
+          - project="${project:-$zenodo}"
+          - project="${project:-$osf}"
+          - ./automations/20_commit_code.sh $project run
+          - ./automations/20_commit_code.sh config.yml
+          - git status
+          - git push
+
+pipelines:
+  custom:
+    1-populate-from-icpsr: #name of this pipeline
+      - variables:          #list variable names under here
+          # These do not need to have a value, if "config.yml" is filled out.
+          - name: openICPSRID   
+          - name: jiraticket
+          - name: ZenodoID
+          #- name: DataverseID
+          #- name: OSFID
+          - name: ProcessStata
+            default: "yes"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: ProcessR
+            default: "yes"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: ProcessPython
+            default: "yes"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: ProcessJulia
+            default: "no"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: ProcessPii
+            default: "yes"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: SkipProcessing
+            default: "no"
+            allowed-values:
+              - "no"
+              - "yes"
+      - step:
+          name: Download
+          image: python:3.12
+          artifacts:
+            - generated/**
+            - cache/**
+          caches:
+            - pip
+          script:
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - chmod a+rx ./automations/*.sh
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+            - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+            - projectID="${openICPSRID}"
+            - projectID="${projectID:-zenodo-$ZenodoID}"
+            - if [ -d $projectID ]; then \rm -rf $projectID; fi
+            - if [ ! -z $openICPSRID ]; then python3 tools/download_openicpsr-private.py $openICPSRID; fi
+            - if [ ! -z $ZenodoID ]; then python3 tools/download_zenodo_draft.py $ZenodoID; fi
+            - ./automations/00_unpack_zip.sh  $projectID
+            - mkdir cache
+            - if [ ! -z $openICPSRID ]; then mv *.zip cache/; fi
+            - if [ ! -z $ZenodoID ]; then zip -rp cache/${projectID}.zip $projectID/* ; fi
+            - ./automations/00_prepare_aux.sh
+            - ./automations/01_check_file_sizes.sh $projectID
+            - ./automations/02_list_data_files.sh $projectID
+            - ./automations/03_list_program_files.sh $projectID
+            - ./automations/04_create_manifest.sh $projectID
+            - ./automations/05_check_zip_files.sh $projectID
+            - ./automations/06_check_duplicates_and_zero_bytes.sh $projectID
+            - ./automations/07_check_file_paths.sh $projectID
+            - ./automations/22_compare_manifests.sh $projectID
+            - ls -lR
+      - step:
+          name: Check downloads
+          script:
+            # check if there are files called $projectID.zip in cache
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+            - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+            - projectID="${openICPSRID}"
+            - projectID="${projectID:-zenodo-$ZenodoID}"
+            - if [ -f cache/$projectID.zip ]; then echo "✅ Found $projectID.zip in cache"; else echo "⚠️  Did not find $projectID.zip in cache. 🛑 You may need to use the BIG pipeline!!! "; exit 2; fi
+      - parallel: # we will run these in parallel
+        - step:
+            name: Run Stata parser 
+            image:
+              name: larsvilhuber/bitbucket-stata:latest
+              username: $W_DOCKER_USERNAME
+              password: $W_DOCKER_PAT
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+              - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+              - projectID="${openICPSRID}"
+              - projectID="${projectID:-zenodo-$ZenodoID}"
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessStata $projectID
+              - ./automations/00_unpack_zip.sh  $projectID
+              - ./automations/10_run_stata_scanner.sh $projectID
+            artifacts:
+              - generated/**
+        - step:
+            name: Run Stata PII scanner
+            image:
+              name: larsvilhuber/bitbucket-stata:latest
+              username: $W_DOCKER_USERNAME
+              password: $W_DOCKER_PAT
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+              - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+              - projectID="${openICPSRID}"
+              - projectID="${projectID:-zenodo-$ZenodoID}"
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessPii $projectID
+              - ./automations/00_unpack_zip.sh  $projectID
+              - ./automations/16_run_pii_scanner.sh $projectID
+            artifacts:
+              - generated/**
+        - step:
+            name: Run R parser
+            image: aeadataeditor/verification-r:latest
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+              - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+              - projectID="${openICPSRID}"
+              - projectID="${projectID:-zenodo-$ZenodoID}"
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessR $projectID
+              - ./automations/00_unpack_zip.sh  $projectID
+              - ./automations/14_run_r_scanner.sh $projectID
+        - step:
+            name: Run Python parser
+            image: python:3.12
+            script:
+              - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+              - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+              - projectID="${openICPSRID}"
+              - projectID="${projectID:-zenodo-$ZenodoID}"
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessPython $projectID
+              - ./automations/00_unpack_zip.sh  $projectID
+              - ./automations/15_run_python_scanner.sh $projectID
+            artifacts:
+              - generated/**
+        - step:
+            name: Run Julia parser
+            image: julia:latest
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+              - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+              - projectID="${openICPSRID}"
+              - projectID="${projectID:-zenodo-$ZenodoID}"
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh $ProcessJulia $projectID
+              - ./automations/00_unpack_zip.sh  $projectID
+              - ./automations/17_run_julia_scanner.sh $projectID
+            artifacts:
+              - generated/**
+        - step:
+            name: Count lines and comments
+            image:
+              name: aldanial/cloc
+              username: $W_DOCKER_USERNAME
+              password: $W_DOCKER_PAT
+            script:
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+              - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+              - projectID="${openICPSRID}"
+              - projectID="${projectID:-zenodo-$ZenodoID}"
+              - chmod a+rx ./automations/*.sh
+              - ./automations/00_preliminaries.sh yes $projectID
+              - ./automations/00_unpack_zip.sh  $projectID
+              - ./automations/08_count_lines.sh $projectID
+            artifacts:
+              - generated/**
+      ## collect all information
+      - step:
+          image: python:3.12
+          name: Add info to REPLICATION.md
+          script:
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - chmod a+rx ./automations/*.sh
+            - ./automations/24_amend_report.sh
+          artifacts:
+            - generated/**
+      - step: 
+          image: python:3.12
+          # This will re-extract the downloaded
+          name: Commit everything back
+          script:
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+            - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+            - projectID="${openICPSRID}"
+            - projectID="${projectID:-zenodo-$ZenodoID}"
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - if [ -d cache ]; then ls -lR cache/*; fi
+            - ls -l generated/*
+            # repeat this part
+            - if [ -d $projectID ]; then \rm -rf $projectID; fi
+            # unpack it all
+            - if [ -f cache/$projectID.zip ]; then mv cache/$projectID.zip .; fi
+            - chmod a+rx ./automations/*.sh
+            - ./automations/00_unpack_zip.sh  $projectID
+            - ./automations/20_commit_code.sh $projectID
+            - ./automations/21_cleanup.sh     $projectID
+            - ./automations/25_replace_report.sh
+            - ./automations/30_cleanup_aux.sh
+            - ./tools/update_config.sh
+            - ./automations/20_commit_code.sh config.yml notag
+            - git status
+            - git push && git push --tags 
+    2-merge-report: #name of this pipeline
+      - variables:          #list variable names under here
+          - name: jiraticket
+      - step:
+          name: Combine Part A and B of the report
+          script:
+            - chmod a+rx automations/*.sh
+            - ./automations/50_merge-parts.sh
+            - git push
+    3-split-report: #name of this pipeline
+      - variables:          #list variable names under here
+          - name: jiraticket
+      - step:
+          name: Split REPLICATION.md into Part A and B of the report
+          script:
+            - chmod a+rx automations/*.sh
+            - ./automations/51_split-parts.sh
+            - git push
+    4-refresh-tools: #name of this pipeline
+      - step:
+          name: Refresh the tools in this repository
+          script:
+            - wget https://raw.githubusercontent.com/AEADataEditor/replication-template/master/tools/update_tools.sh
+            - chmod a+rx update_tools.sh
+            - ./update_tools.sh
+            - git push
+    5-rename-directory: #name of this pipeline
+      - variables:          #list variable names under here
+          - name: oldName
+          - name: newName
+          - name: jiraticket
+      - step:
+          name: Rename a deposit directory
+          script:
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - git mv $oldName $newName
+            - git commit -m "[skip ci] Rename $oldName to $newName"
+            - export openICPSRID=$newName
+            - ./tools/update_config.sh
+            - ./automations/20_commit_code.sh config.yml notag
+            - git push
+    6-convert-eps-pdf:  # this can be run to convert EPS and PDF files to PNG
+      - variables:          #list variable names under here
+          # These do not need to have a value, if "config.yml" is filled out.
+          - name: path
+          - name: jiraticket
+          - name: ProcessEPS
+            default: "yes"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: ProcessPDF
+            default: "no"
+            allowed-values:
+              - "no"
+              - "yes"
+          - name: DockerImg
+            default: "dpokidov/imagemagick"
+      - step:
+          name: Convert EPS and PDF to PNG
+          services:
+            - docker
+          script:
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - chmod a+rx ./automations/*.sh
+            - docker run --rm -v $(pwd):/imgs --entrypoint=/bin/bash $DockerImg ./automations/52_convert_eps_pdf.sh -p "$path" -e $ProcessEPS -d $ProcessPDF
+            - git add "$path"
+            - git commit -m "[skip ci] Converted EPS and PDF to PNG"
+            - git push
+    7-download-box-manifest: #name of this pipeline
+      - variables:          #list variable names under here
+          - name: repository_name
+      - step:
+          image: python:3.12
+          name: Download Box and create manifests
+          caches:
+            - pip
+          script:
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - chmod a+rx ./automations/*.sh
+            - python3 ./tools/download_box_private.py $repository_name
+            - ./automations/00_unpack_zip.sh  restricted
+            - ./automations/04_create_manifest.sh restricted restricted
+            - git add -f generated/*
+            - git commit -m "[skip ci] Downloaded Box files and created manifests"
+            - git push
+    8-download-sivacor: #name of this pipeline
+      - variables:          #list variable names under here
+          - name: jiraticket
+            default: ""
+      - step:
+          image: python:3.12
+          name: Download SIVACOR artifacts
+          caches:
+            - pip
+          script:
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - if [ -z "$jiraticket" ]; then jiraticket=$(basename $(pwd)); fi  # Determine Jira case from variable, directory name, or config.yml
+            - if [ -z "$jiraticket" ]; then echo "Error: Could not determine Jira case"; exit 1; fi
+            - echo "Using Jira case: $jiraticket"
+            - python3 tools/download_sivacor.py $jiraticket  # Run the SIVACOR download script
+            - git push -u origin HEAD  # Push the created branch (do not merge to master)
+    w-big-populate-from-icpsr: #name of this pipeline
+      - variables:          #list variable names under here
+          # These do not need to have a value, if "config.yml" is filled out.
+          - name: openICPSRID  
+          - name: ZenodoID 
+          - name: jiraticket
+      - step:
+          name: Download and commit
+          size: 2x
+          image: python:3.12
+          caches:
+            - pip
+          script:
+            - apt-get update && apt-get install -y cloc
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - . ./tools/parse_yaml.sh
+            - eval $(parse_yaml config.yml)
+            - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+            - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+            - projectID="${openICPSRID}"
+            - projectID="${projectID:-zenodo-$ZenodoID}"
+            - if [ -d $projectID ]; then \rm -rf $projectID; fi
+            - if [ ! -z $openICPSRID ]; then python3 tools/download_openicpsr-private.py $openICPSRID; fi
+            - if [ ! -z $ZenodoID ]; then python3 tools/download_zenodo_draft.py $ZenodoID; fi
+            - chmod a+rx ./automations/*.sh
+            - ./automations/00_prepare_aux.sh
+            - ./automations/00_unpack_zip.sh  $projectID
+            - ./automations/01_check_file_sizes.sh $projectID
+            - ./automations/02_list_data_files.sh $projectID
+            - ./automations/03_list_program_files.sh $projectID
+            - ./automations/04_create_manifest.sh $projectID
+            - ./automations/05_check_zip_files.sh $projectID
+            - ./automations/06_check_duplicates_and_zero_bytes.sh $projectID
+            - ./automations/07_check_file_paths.sh $projectID
+            - ./automations/08_count_lines.sh $projectID
+            - ./automations/22_compare_manifests.sh $projectID
+            - ./automations/24_amend_report.sh
+            - ./automations/20_commit_code.sh $projectID
+            - ./automations/21_cleanup.sh     $projectID
+            - ./automations/25_replace_report.sh
+            - ./automations/30_cleanup_aux.sh
+            - ./tools/update_config.sh
+            - ./automations/20_commit_code.sh config.yml notag
+            - git status
+            - git push 
+            - git push --tags 
+
+    x-run-python: 
+      - variables: 
+          - name: Script
+            default: "run-python.sh"
+      - step: 
+          name: Run Python code
+          image: python:3.11
+          script:
+            - if [ -f "$Script" ]; then chmod a+rx $Script; ./$Script; fi
+            - if [ -f "post-run.sh" ]; then chmod a+rx post-run.sh; ./post-run.sh; fi
+            - git push
+    z-run-stata:  # name of this pipeline
+      - variables:          #list variable names under here
+          # These do not need to have a value, if "config.yml" is filled out.
+          - name: openICPSRID   
+          #- name: ZenodoID
+          #- name: DataverseID
+          #- name: OSFID
+          - name: MainFile
+            default: "main.do"
+          - name: RunCommand
+            default: "run.sh"
+      - step: 
+            <<: *z-run-any-anchor
+            name: Run Stata code
+            size: 2x
+            image:
+              name: larsvilhuber/bitbucket-stata:latest
+              username: $W_DOCKER_USERNAME
+              password: $W_DOCKER_PAT
+
+    z-run-any-big: # name of this pipeline
+      - variables:          #list variable names under here
+          # These do not need to have a value, if "config.yml" is filled out.
+          - name: openICPSRID   
+          #- name: ZenodoID
+          #- name: DataverseID
+          #- name: OSFID
+          - name: MainFile
+          - name: RunCommand
+            default: "run.sh"
+      - step:
+            name: Run R or Stata code
+            size: 8x
+            image:
+              name: larsvilhuber/bitbucket-stata:latest
+              username: $W_DOCKER_USERNAME
+              password: $W_DOCKER_PAT
+            # commented out to speed up processing. Uncomment for debugging
+            #artifacts:
+            # - 1**/**
+            script:
+              - set -v
+              - . ./tools/parse_yaml.sh
+              - eval $(parse_yaml config.yml)
+              - if [ -z $openICPSRID ]; then openICPSRID=$openicpsr; fi
+              - if [ -z $ZenodoID ]; then ZenodoID=$zenodo; fi
+              - projectID="${openICPSRID}"
+              - projectID="${projectID:-zenodo-$ZenodoID}"
+              - if [ -f tools/download_openicpsr-private.py ]; then python3 tools/download_openicpsr-private.py $projectID; fi
+              - chmod a+rx ./automations/*.sh
+              - chmod a+rx ./*.sh
+              - ./automations/00_unpack_zip.sh  $projectID
+              - ./tools/linux-system-info.sh
+              - ./tools/update_config.sh
+              - ./run.sh
+              - ./automations/20_commit_code.sh $projectID run
+              - ./automations/20_commit_code.sh config.yml notag
+              - git status
+              - git push
+
+  # default:
+  #     - step:
+  #         name: Check commit message and run pipeline
+  #         script:
+  #           - |
+  #             BITBUCKET_COMMIT_MESSAGE=`git log --format=%B -n 1 $BITBUCKET_COMMIT`
+  #             if echo "$BITBUCKET_COMMIT_MESSAGE" | grep -qiE "run-stata|run-r"; then
+  #               echo "Commit message contains 'run-*'. Running z-run- steps."
+  #               exit 0  # This will allow the pipeline to continue to the next step
+  #             else
+  #               echo "Commit message does not contain 'run-stata|run-r'. Skipping z-run- steps."
+  #               exit 1  # This will stop the pipeline here if the condition is not met
+  #             fi
+  #     - parallel:
+  #       - step: 
+  #             <<: *z-run-any-anchor
+  #             name: Run Stata code
+  #             size: 2x
+  #             image:
+  #               name: larsvilhuber/bitbucket-stata:latest
+  #               username: $W_DOCKER_USERNAME
+  #               password: $W_DOCKER_PAT
+  #       - step:
+  #             <<: *z-run-any-anchor
+  #             name: Run R code
+  #             size: 2x
+  #             image:
+  #               name: aeadataeditor/verification-r:latest
