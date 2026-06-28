@@ -1,0 +1,71 @@
+# MyST v2 Configuration
+version: 1
+
+project:
+  title: AEA Data Editor Replication Template Documentation
+  description: Documentation for AEA Data Editor replication template tools and workflows
+  authors:
+    - name: AEA Data Editor Team
+  github: https://github.com/aeadataeditor/replication-template
+  license: CC-BY-4.0
+  exclude:
+    - superpowers/**
+  index: index.md
+  toc:
+    - file: index.md
+      title: Home
+    - url: 'https://labordynamicsinstitute.github.io/ldilab-manual/11-00-jira-workflow.html'
+      title: AEA JIRA Workflow
+    - file: tools/index.md
+      title: Tools
+      children:
+        - title: Data Download Tools
+          children:
+            - file: tools/download/96-90-download_dv.md
+            - file: tools/download/96-90-download_openicpsr-public.md
+            - file: tools/download/96-90-download_openicpsr-private.md
+            - file: tools/download/96-90-download_box_private.md
+            - file: tools/download/96-90-download_zenodo.md
+            - file: tools/download/96-90-download_zenodo_public.md
+            - file: tools/download/96-90-download_zenodo_draft.md
+            - file: tools/download/96-90-download_osf.md
+            - file: tools/download/96-90-download_worldbank.md
+            - file: tools/download/96-90-download_sivacor.md
+            - file: tools/download/96-90-download_from_jira_url.md
+        - title: JIRA Integration Tools
+          children:
+            - file: tools/jira/96-90-jira_get_info.md
+            - file: tools/jira/96-90-jira_find_task_by_icpsr.md
+            - file: tools/jira/96-90-jira_add_comment.md
+        - title: Data Analysis & Validation Tools
+          children:
+            - file: tools/analysis/96-90-summarize_data.md
+            - file: tools/analysis/96-90-advanced_pdf_extractor.md
+            - file: tools/analysis/96-90-check_ipynb_order.md
+            - file: tools/analysis/96-90-doi_validator.md
+            - file: tools/analysis/96-90-find_cran_date.md
+        - title: Conversion & Format Tools
+          children:
+            - file: tools/conversion/96-90-matlab_convert_fig.md
+            - file: tools/conversion/96-90-matlab_convert_mat2csv.md
+            - file: tools/conversion/96-90-mk_tex_table.md
+            - file: tools/conversion/96-90-generate_png_diff.md
+        - title: Repository & Cloud Tools
+          children:
+            - file: tools/repository/96-90-list_box_files.md
+            - file: tools/repository/96-90-get_sivacor_info.md
+            - file: tools/repository/96-90-zenodo_get_ci.md
+            - file: tools/repository/96-90-sync-codeocean.md
+    - file: automations/index.md
+      title: Automations
+      children:
+        - file: automations/96-92-bitbucket-pipelines.md
+  
+site:
+  template: book-theme
+  title: AEA Replication Template
+  options:
+    logo: ""
+    logo_text: AEA Data Editor
+    favicon: "favicon.ico"
+    folders: true
