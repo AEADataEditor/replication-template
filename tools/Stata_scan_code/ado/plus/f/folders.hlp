@@ -1,0 +1,92 @@
+{smcl}
+{* 21nov2006}{...}
+{hline}
+help for {hi:folders}
+{hline}
+
+{title:Show names of folders or directories in compact form}
+
+{p 8 17 2}
+{cmd:folders} 
+[{it:folderspec} [{it:folderspec} [ ... ]]]
+
+
+{title:Description}
+
+{p 4 4 2}{cmd:folders} lists the names of folders or directories in
+compact form. Hereafter, folder means "folder or directory", regardless
+of what you or your operating system regard as standard terminology.
+
+{p 4 4 2}With no arguments, {cmd:folders} lists names of folders within the
+current folder. 
+
+{p 4 4 2}Given a {it:folderspec} that is a pattern containing {cmd:?} or
+{cmd:*}, {cmd:folders} lists names of folders matching that pattern. 
+The pattern may include a prefix indicating a folder that is not
+the current folder. 
+
+{p 4 4 2}Otherwise, given a {it:folderspec} that is a folder name, 
+{cmd:folders} lists names of folders contained within that folder. 
+
+{p 4 4 2}The list of foldernames is returned in {cmd:r(folders)}, so 
+long as that is not empty. 
+
+
+{title:Remarks} 
+
+{p 4 4 2}The name {cmd:folders} (rather than say {cmd:dirs}) is chosen
+partly to distinguish this command sharply from the inbuilt Stata
+command {help dir}. 
+
+{p 4 4 2}It is recommended that even if you use Windows, you use forward
+slashes {cmd:/} rather than backward slashes {cmd:\}.  Stata will
+understand and there will then be no clash with other meanings for the
+backward slash. 
+
+
+{title:Examples}
+
+{p 4 4 2}If you change directory  
+
+{p 4 8 2}{cmd:. cd "`c(sysdir_stata)'"}
+
+{p 4 4 2}{cmd:folders} should then return {cmd:ado} as the name of
+the sole folder within the current folder. If you specify 
+
+{p 4 8 2}{cmd:. folders ado}
+
+{p 4 4 2}{cmd:folders} should then return {cmd:base updates} as the names 
+of the folders in that folder. If you specify 
+
+{p 4 8 2}{cmd:. folders ado/base/c* ado/base/d*} 
+
+{p 4 4 2}{cmd:folders} should then return {cmd:c d} as the names 
+of all the folders satisfying those patterns. If you specify 
+
+{p 4 8 2}{cmd:. folders frog} 
+
+{p 4 4 2}{cmd:folders} should then return error 601 as no such folder
+exists. 
+
+
+{title:Acknowledgements}
+
+{p 4 4 2}
+William Gould kindly told me about the subroutine for display in columns, 
+which is copied from the source code for {help classutil}. 
+Kit Baum was a very helpful tester. 
+
+
+{title:Author}
+
+{p 4 4 2}Nicholas J. Cox, Durham University, U.K.{break} 
+         n.j.cox@durham.ac.uk
+
+
+{title:Also see}
+
+{p 4 13 2}Online:  
+help for {help dir}, 
+help for {help extended_fcn:extended macro functions}, 
+help for {help fs} (if installed)
+

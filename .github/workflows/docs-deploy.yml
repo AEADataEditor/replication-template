@@ -1,0 +1,75 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r docs/requirements.txt
+
+      # MyST downloads the book-theme site template anonymously from
+      # github.com, which GitHub intermittently rejects (403) from Actions
+      # runner IPs. Pre-fetch it with the workflow token instead; MyST
+      # reuses an already-populated _build/templates cache without
+      # downloading.
+      - name: Pre-fetch MyST site template
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TDIR=docs/_build/templates/site/myst/book-theme
+          mkdir -p "$TDIR"
+          curl --retry 5 --retry-all-errors -sSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/myst-templates/book-theme/zipball/main \
+            -o "$RUNNER_TEMP/book-theme.zip"
+          unzip -q "$RUNNER_TEMP/book-theme.zip" -d "$RUNNER_TEMP/book-theme"
+          cp -r "$RUNNER_TEMP"/book-theme/*/. "$TDIR/"
+          test -f "$TDIR/template.yml"
+
+      - name: Build MyST documentation
+        run: |
+          cd docs && myst build --html
+        env:
+          BASE_URL: https://aeadataeditor.github.io/replication-template
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/_build/html
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
