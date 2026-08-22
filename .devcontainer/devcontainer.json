@@ -1,0 +1,11 @@
+{
+    "name": "replication-template",
+    "postCreateCommand": ".devcontainer/init.sh",
+    "settings": {
+        "workbench.colorTheme": "Visual Studio Light",
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },    
+    "remoteEnv": {
+        "DOCKER_BUILDKIT": "1",
+	}
+}
