@@ -1,0 +1,20 @@
+{
+  "code_review": {
+    "default_prompt": "You are a code reviewer. Find any bugs in the code in this repository in the {directory} directory.",
+    "python_focus": [
+      "Import errors or missing modules",
+      "Variable naming inconsistencies",
+      "File path issues (hardcoded paths, missing directories)",
+      "Data type mismatches or conversion errors",
+      "Index/column name mismatches in pandas operations",
+      "Division by zero or NaN handling issues",
+      "Logic errors in conditionals",
+      "Missing error handling",
+      "Inefficient or problematic code patterns"
+    ],
+    "report_commands": [
+      "write the error report to a file AI-Review.md",
+      "Add to the report the total numbers of tokens used for the review, and the approximate cost of this session."
+    ]
+  }
+}

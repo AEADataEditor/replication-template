@@ -1,0 +1,4 @@
+# Python dependencies for building MyST v2 documentation
+# Install with: pip install -r requirements.txt
+
+mystmd>=1.3.0

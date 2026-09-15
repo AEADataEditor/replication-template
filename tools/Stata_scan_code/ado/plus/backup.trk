@@ -1,0 +1,66 @@
+* 00000002
+*! version 1.0.0
+* Do not erase or edit this file
+* It is used by Stata to track the ado and help
+* files you have installed.
+
+S http://fmwww.bc.edu/repec/bocode/f
+N fs.pkg
+D  1 Mar 2021
+U 1
+d 'FS': module to show names of files in compact form
+d 
+d fs lists the names of files in compact form. With no arguments,
+d    fs lists names of files in the current directory or folder.
+d   Otherwise, it follows file specifications. A file
+d specification      is a filename or (more commonly) a set of
+d filenames indicated by      the use of wildcards * or ?. folders
+d is similar, but works       for folders (or directories).
+d 
+d KW: dir
+d KW: ls
+d KW: files
+d KW: folders
+d KW: directories
+d 
+d Requires: Stata version 8
+d 
+d Distribution-Date: 20061128
+d 
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d 
+f f\fs.ado
+f f\fs.hlp
+f f\folders.ado
+f f\folders.hlp
+e
+S http://fmwww.bc.edu/repec/bocode/t
+N txttool.pkg
+D  1 Mar 2021
+U 2
+d 'TXTTOOL': module providing utilities for text analysis
+d 
+d  txttool provides a set of tools for managing and analyzing
+d free-form text. The program integrates    several built-in Stata
+d functions with new text capabilities, including a utility to
+d create a    bag-of-words representation of text and an
+d implementation of Porter's word stemming algorithm.
+d 
+d KW: text
+d KW: free-form text
+d KW: bag-of-words
+d KW: word stemming
+d 
+d Requires: Stata version 10
+d 
+d Distribution-Date: 20150216
+d 
+d Author: Unislawa Williams , Spelman College
+d Support: email uwilliams@@spelman.edu
+d 
+f t\txttool.ado
+f t\txttool.sthlp
+f l\lmmtxttool.mlib
+f l\lmmtxttool_source.sthlp
+e
