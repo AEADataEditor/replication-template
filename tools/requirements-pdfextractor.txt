@@ -1,0 +1,58 @@
+# Advanced PDF Content Extractor - Requirements
+# ==============================================
+# 
+# Install with: pip install -r requirements-pdfextractor.txt
+#
+# This file contains all dependencies needed for the Advanced PDF Extractor
+# to extract tables and figures from complex, multi-layered PDF documents.
+
+# Core PDF Processing Libraries
+# -----------------------------
+PyMuPDF>=1.24.0           # PDF manipulation, rendering, and layer extraction
+pdfplumber>=0.10.0         # Precise text-based PDF analysis and simple tables
+tabula-py>=2.8.0           # Java-based table extraction (requires Java Runtime)
+JPype1>=1.4.0              # Java-Python bridge (required for tabula-py)
+camelot-py[cv]>=1.0.0      # Computer vision table detection with OpenCV
+
+# Data Processing & Analysis  
+# ---------------------------
+pandas>=2.0.0              # DataFrame manipulation and CSV export
+numpy>=1.24.0              # Numerical operations and array processing
+
+# Image Processing & Computer Vision
+# ----------------------------------
+Pillow>=9.5.0              # Image processing and format conversion
+opencv-python>=4.8.0       # Computer vision for table detection (via camelot[cv])
+
+# Additional Dependencies (automatically installed with above)
+# -----------------------------------------------------------
+# These are typically installed automatically but listed for reference:
+# - charset-normalizer      # Text encoding detection (via pdfplumber)
+# - cryptography            # PDF decryption support (via pdfminer)
+# - openpyxl                # Excel file support (via camelot)
+# - pypdf                   # PDF utilities (via camelot)
+# - scipy                   # Scientific computing (via opencv)
+# - pdfminer-six            # Low-level PDF parsing (via pdfplumber)
+
+# Development & Testing (Optional)
+# --------------------------------
+# pytest>=7.0.0            # For running tests (uncomment if needed)
+# black>=23.0.0             # Code formatting (uncomment if needed)
+
+# System Requirements (Not installable via pip)
+# =============================================
+# Java Runtime Environment (JRE) 11+ : Required for tabula-py table extraction
+# Operating System: Linux, macOS, or Windows
+# Python: 3.12+ (recommended), minimum 3.9+
+# Memory: 4GB+ RAM recommended for large PDFs
+# 
+# Installation Instructions:
+# 1. Ensure Python 3.12+ is installed
+# 2. Install Java Runtime: sudo apt install openjdk-11-jre (Ubuntu/Debian)
+# 3. Create virtual environment: python3.12 -m venv pdf_extraction_env
+# 4. Activate environment: source pdf_extraction_env/bin/activate
+# 5. Install packages: pip install -r requirements-pdfextractor.txt
+#
+# Verification:
+# python advanced_pdf_extractor.py --help
+# python advanced_pdf_extractor.py --version
