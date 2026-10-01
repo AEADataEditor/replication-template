@@ -35,18 +35,7 @@ If you would like to contribute to this repository, please [create a new issue](
 The following have contributed to this repository:
 
 <!-- CONTRIBUTORS:START -->
-- aaf101, [@aaf101](https://github.com/aaf101)
-- Anna Sundheim, [@ansu1338](https://github.com/ansu1338)
-- Danny McGuire, [@dmcguir5](https://github.com/dmcguir5)
-- David, [@dwasser](https://github.com/dwasser)
-- Kacper Kowalik, [@Xarthisius](https://github.com/Xarthisius)
 - Lars Vilhuber, [@larsvilhuber](https://github.com/larsvilhuber)
-- LeonelBorjaPlaza, [@LeonelBorjaPlaza](https://github.com/LeonelBorjaPlaza)
-- Meredith Welch, [@mswelch](https://github.com/mswelch)
-- Michael Darisse, [@michaeldarisse](https://github.com/michaeldarisse)
-- pdeffebach, [@pdeffebach](https://github.com/pdeffebach)
-- Sofia Encarnacion, [@sencarn2](https://github.com/sencarn2)
-- Takshil Sachdev, [@ts724](https://github.com/ts724)
 <!-- CONTRIBUTORS:END -->
 
 This list is updated automatically once a month by [update-contributors.yml](.github/workflows/update-contributors.yml).
