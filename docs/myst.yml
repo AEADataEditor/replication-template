@@ -1,0 +1,115 @@
+# MyST v2 Configuration
+version: 1
+
+project:
+  title: AEA Data Editor Replication Template Documentation
+  description: Documentation for AEA Data Editor replication template tools and workflows
+  authors:
+    - name: AEA Data Editor Team
+  github: https://github.com/aeadataeditor/replication-template
+  license: CC-BY-4.0
+  exclude:
+    - superpowers/**
+  index: index.md
+  toc:
+    - file: index.md
+      title: Home
+    - url: 'https://labordynamicsinstitute.github.io/ldilab-manual/11-00-jira-workflow.html'
+      title: AEA JIRA Workflow
+    - file: tools/index.md
+      title: Tools
+      children:
+        - title: Data Download Tools
+          children:
+            - file: tools/download/96-90-download_dv.md
+            - file: tools/download/96-90-download_openicpsr-public.md
+            - file: tools/download/96-90-download_openicpsr-private.md
+            - file: tools/download/96-90-download_box_private.md
+            - file: tools/download/96-90-download_zenodo.md
+            - file: tools/download/96-90-download_zenodo_public.md
+            - file: tools/download/96-90-download_zenodo_draft.md
+            - file: tools/download/96-90-download_osf.md
+            - file: tools/download/96-90-download_worldbank.md
+            - file: tools/download/96-90-download_sivacor.md
+            - file: tools/download/96-90-download_from_jira_url.md
+        - title: JIRA Integration Tools
+          children:
+            - file: tools/jira/96-90-jira_get_info.md
+            - file: tools/jira/96-90-jira_find_task_by_icpsr.md
+            - file: tools/jira/96-90-jira_add_comment.md
+            - file: tools/jira/96-90-jira_download_attachments.md
+            - file: tools/jira/96-90-jira_sync_fields.md
+        - title: Data Analysis & Validation Tools
+          children:
+            - file: tools/analysis/96-90-summarize_data.md
+            - file: tools/analysis/96-90-advanced_pdf_extractor.md
+            - file: tools/analysis/96-90-check_ipynb_order.md
+            - file: tools/analysis/96-90-doi_validator.md
+            - file: tools/analysis/96-90-find_cran_date.md
+        - title: Conversion & Format Tools
+          children:
+            - file: tools/conversion/96-90-matlab_convert_fig.md
+            - file: tools/conversion/96-90-matlab_convert_mat2csv.md
+            - file: tools/conversion/96-90-mk_tex_table.md
+            - file: tools/conversion/96-90-generate_png_diff.md
+            - file: tools/conversion/96-90-add-png.md
+        - title: Repository & Cloud Tools
+          children:
+            - file: tools/repository/96-90-list_box_files.md
+            - file: tools/repository/96-90-get_sivacor_info.md
+            - file: tools/repository/96-90-generate_sivacor_partb.md
+            - file: tools/repository/96-90-zenodo_get_ci.md
+            - file: tools/repository/96-90-sync-codeocean.md
+            - file: tools/repository/96-90-sbatch-shell.md
+    - file: automations/index.md
+      title: Automations
+      children:
+        - file: automations/96-92-bitbucket-pipelines.md
+        - title: Automation scripts
+          children:
+            - file: automations/96-92-00_preliminaries.md
+            - file: automations/96-92-00_prepare_aux.md
+            - file: automations/96-92-00_unpack_zip.md
+            - file: automations/96-92-01_check_file_sizes.md
+            - file: automations/96-92-02_create_manifest.md
+            - file: automations/96-92-03_list_data_files.md
+            - file: automations/96-92-04_list_program_files.md
+            - file: automations/96-92-05_check_zip_files.md
+            - file: automations/96-92-06_check_duplicates_and_zero_bytes.md
+            - file: automations/96-92-07_check_file_paths.md
+            - file: automations/96-92-08_count_lines.md
+            - file: automations/96-92-09_relist_if_manifest_changed.md
+            - file: automations/96-92-10_run_stata_scanner.md
+            - file: automations/96-92-11_check_statalog.md
+            - file: automations/96-92-12_run_stata_main.md
+            - file: automations/96-92-14_run_r_scanner.md
+            - file: automations/96-92-15_run_python_scanner.md
+            - file: automations/96-92-16_run_pii_scanner.md
+            - file: automations/96-92-17_run_julia_scanner.md
+            - file: automations/96-92-18_summarize_sivacor.md
+            - file: automations/96-92-20_commit_code.md
+            - file: automations/96-92-21_cleanup.md
+            - file: automations/96-92-22_compare_manifests.md
+            - file: automations/96-92-24_amend_report.md
+            - file: automations/96-92-25_replace_report.md
+            - file: automations/96-92-26_update_jira_software.md
+            - file: automations/96-92-27_update_jira_deposit_size.md
+            - file: automations/96-92-sivacor-partb.md
+            - file: automations/96-92-30_cleanup_aux.md
+            - file: automations/96-92-30_download_commit_jira_attachments.md
+            - file: automations/96-92-50_merge-parts.md
+            - file: automations/96-92-51_split-parts.md
+            - file: automations/96-92-52_convert_eps_pdf.md
+            - file: automations/96-92-60_process_restricted_box.md
+            - file: automations/96-92-70_publish_comment.md
+  
+site:
+  template: book-theme
+  title: AEA Replication Template
+  options:
+    logo: "images/logo-cornell-aea.png"
+    logo_dark: "images/logo-cornell-aea-dark.png"
+    logo_text: AEA Data Editor
+    logo_alt: "Cornell University seal behind the AEA Data Editor logo"
+    favicon: "favicon.ico"
+    folders: true
