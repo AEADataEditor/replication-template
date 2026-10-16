@@ -1,0 +1,14 @@
+openicpsr: 
+osf:
+# Dataverse: DOI (doi:10.7910/DVN/XXXXXX or https://doi.org/...) or dataset URL, any Dataverse installation
+dataverse:
+zenodo:
+# World Bank Reproducible Research Repository: DOI (https://doi.org/10.60572/xxxx-xxxx), DOI suffix, catalog URL, or catalog ID
+worldbank:
+jiraticket:
+# auto-populated by 60_process_restricted_box.sh from the Jira "Restricted data Box Folder ID" field or discovered via search; do not edit by hand
+boxfolderid:
+mcid: 
+main:
+stata18version: 2024-09-04
+limitsize: 100
