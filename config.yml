@@ -1,0 +1,16 @@
+openicpsr: 
+osf:
+# Dataverse: DOI (doi:10.7910/DVN/XXXXXX or https://doi.org/...) or dataset URL, any Dataverse installation
+dataverse:
+zenodo:
+# World Bank Reproducible Research Repository: DOI (https://doi.org/10.60572/xxxx-xxxx), DOI suffix, catalog URL, or catalog ID
+worldbank:
+jiraticket:
+# auto-populated by 60_process_restricted_box.sh from the Jira "Restricted data Box Folder ID" field or discovered via search; do not edit by hand
+boxfolderid:
+mcid: 
+main:
+stata18version: 2024-09-04
+limitsize: 100
+bigingest_threshold_mb: 60511   # measured free space of the build volume of a 1x/2x step; if the deposit needs more, the big ingest uses a 4x VM
+bigingest_margin_mb: 2048   # scratch space for the clone, logs, manifests and git's temporary files
