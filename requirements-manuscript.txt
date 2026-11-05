@@ -1,0 +1,11 @@
+# Converters for automations/31_parse_manuscript.sh (pipeline m-parse-manuscript).
+# Install the CPU build of torch first (the cloud workers have no GPU):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements-manuscript.txt
+#
+# marker 2.x converts a 90-page paper in about 30 s with 2.5 GB, on CPU or GPU
+# alike. marker 1.10.2 takes 15-35 min and 12.5 GB on CPU; it keeps LaTeX
+# equations and a few more figure captions, and splits multi-panel figures into
+# one image per panel. To switch, change the pin below.
+marker-pdf==2.0.0
+markitdown[pdf]
