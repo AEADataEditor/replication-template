@@ -1,0 +1,7 @@
+# Python dependencies for GitHub Actions workflows in this directory.
+# Kept separate from tools/requirements.txt, which pins versions used by
+# offline processes and must not be changed for CI purposes.
+# Install with: pip install -r .github/workflows/requirements.txt
+
+# Used by tools/update_contributors.py (update-contributors.yml)
+requests>=2.32.4
