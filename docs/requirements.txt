@@ -1,0 +1,7 @@
+# Python dependencies for building MyST v2 documentation
+# Install with: pip install -r requirements.txt
+
+mystmd>=1.3.0
+
+# Used by tools/inject_banner.py (preview/announcement banner)
+pyyaml>=6.0

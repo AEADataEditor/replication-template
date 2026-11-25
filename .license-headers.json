@@ -1,0 +1,20 @@
+{
+  "holder": "Lars Vilhuber and contributors",
+  "include": [".claude/", ".github/", "automations/", "build/", "docs/", "tests/", "tools/",
+              "PII_stata_scan.do", "run.sh", "template-config.do", "template-config.m", "template-main.R"],
+  "exclude": ["ado/"],
+  "default_author": "Lars Vilhuber",
+  "aliases": {
+    "lars.vilhuber@cornell.edu": "Lars Vilhuber",
+    "lars@vilhuber.com": "Lars Vilhuber",
+    "lars+git+automation@vilhuber.com": "Lars Vilhuber",
+    "ansu1338@colorado.edu": "Anna Sundheim",
+    "100437375+aaf101@users.noreply.github.com": "Andres Aradillas Fernandez",
+    "dannymcguire06@icloud.com": "Danny McGuire",
+    "nwl27_RS@ciserrsch.cornell.edu": "Naomi Li",
+    "LeonelBorjaPlaza": "Leonel Borja Plaza",
+    "xarthisius.kk@gmail.com": "Kacper Kowalik"
+  },
+  "bots": ["\\[bot\\]", "noreply@anthropic\\.com"],
+  "ignore_commits": ["ada8f6e"]
+}

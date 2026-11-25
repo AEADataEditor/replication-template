@@ -1,0 +1,200 @@
+name: Deploy Documentation
+
+# Build the MyST documentation and (conditionally) publish it.
+# Modeled on AEADataEditor/aeadataeditor.github.io/.github/workflows/main.yml:
+#
+# - build   - always runs. Builds the site and uploads it as a downloadable
+#             workflow artifact (`docs-html`).
+# - deploy  - pushes to master (i.e. in the deployed
+#             AEADataEditor/replication-template repo) and manual runs:
+#             publishes to GitHub Pages under /replication-template.
+# - preview - pull requests from a branch of the same repository (not a
+#             fork): deploys the site to Cloudflare Pages as a per-PR
+#             preview and posts the link as a PR comment. Needs the
+#             CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID secrets (shared
+#             with aeadataeditor.github.io, ideally as organization
+#             secrets); without them the job is skipped with a notice.
+#             See build/README-DEPLOYMENT.md.
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One production deployment at a time; previews are serialized per PR.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('docs-preview-{0}', github.event.pull_request.number) || 'pages' }}
+  cancel-in-progress: true
+
+env:
+  CF_PAGES_PROJECT: replication-template-docs
+  LIVE_URL: https://aeadataeditor.github.io/replication-template/
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r docs/requirements.txt
+
+      # MyST downloads the book-theme site template anonymously from
+      # github.com, which GitHub intermittently rejects (403) from Actions
+      # runner IPs. Pre-fetch it with the workflow token instead; MyST
+      # reuses an already-populated _build/templates cache without
+      # downloading.
+      - name: Pre-fetch MyST site template
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TDIR=docs/_build/templates/site/myst/book-theme
+          mkdir -p "$TDIR"
+          curl --retry 5 --retry-all-errors -sSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/myst-templates/book-theme/zipball/main \
+            -o "$RUNNER_TEMP/book-theme.zip"
+          unzip -q "$RUNNER_TEMP/book-theme.zip" -d "$RUNNER_TEMP/book-theme"
+          cp -r "$RUNNER_TEMP"/book-theme/*/. "$TDIR/"
+          test -f "$TDIR/template.yml"
+
+      # Production is served from <org>.github.io/replication-template; a
+      # preview is served from the root of its own Cloudflare Pages host.
+      - name: Build MyST documentation
+        env:
+          BASE_URL: ${{ github.event_name != 'pull_request' && '/replication-template' || '' }}
+        run: |
+          cd docs && myst build --html
+
+      # Same BASE_URL as the build step, so each page's AGENTS.md link resolves.
+      - name: Add noindex tags, AGENTS.md and robots.txt
+        env:
+          BASE_URL: ${{ github.event_name != 'pull_request' && '/replication-template' || '' }}
+        run: bash docs/_postbuild.sh docs/_build/html
+
+      # Previews always carry a "not the live site" banner; any build also
+      # carries the site-wide announcement in docs/banner.yml, if enabled
+      # (no-op when that file is absent). See tools/inject_banner.py.
+      - name: Add banner
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            python3 tools/inject_banner.py \
+              --preview "PR #$PR, commit ${HEAD_SHA:0:7}, built $(date -u '+%Y-%m-%d %H:%M UTC')" \
+              --live-url "$LIVE_URL"
+          else
+            python3 tools/inject_banner.py
+          fi
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs/_build/html
+          retention-days: 14
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/_build/html
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  preview:
+    needs: build
+    # Forked PRs cannot read secrets, and handing a deploy token to
+    # unreviewed code is a bad trade for a preview.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write     # only for the PR comment
+    steps:
+      - name: Check for Cloudflare credentials
+        id: creds
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID not available to this repository; skipping docs preview (see build/README-DEPLOYMENT.md)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download site artifact
+        if: steps.creds.outputs.ok == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-html
+          path: _site
+
+      # A `_worker.js` or `_routes.json` in the deployed directory would make
+      # Cloudflare run it as server-side code; a docs build never has them.
+      - name: Strip server-side code
+        if: steps.creds.outputs.ok == 'true'
+        run: rm -rf _site/_worker.js _site/_routes.json
+
+      - name: Deploy PR preview
+        id: preview
+        if: steps.creds.outputs.ok == 'true'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Create the Pages project on first use; fails harmlessly if it exists.
+          preCommands: >-
+            wrangler pages project create ${{ env.CF_PAGES_PROJECT }}
+            --production-branch=master || true
+          command: >-
+            pages deploy ./_site
+            --project-name=${{ env.CF_PAGES_PROJECT }}
+            --branch=pr-${{ github.event.pull_request.number }}
+
+      - name: Publish preview link
+        if: steps.preview.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          URL: ${{ steps.preview.outputs.pages-deployment-alias-url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "📖 Docs preview: $URL" >> "$GITHUB_STEP_SUMMARY"
+          gh pr comment "$PR" --repo "$REPO" --edit-last --create-if-none \
+            --body "📖 **Docs preview:** $URL — commit \`${HEAD_SHA:0:7}\`"
